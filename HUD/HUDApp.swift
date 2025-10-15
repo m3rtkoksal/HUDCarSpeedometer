@@ -11,7 +11,9 @@ import SwiftUI
 struct HUDApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HUDView()
+                .statusBarHidden(true)
+                .preferredColorScheme(.dark)
         }
     }
 }
