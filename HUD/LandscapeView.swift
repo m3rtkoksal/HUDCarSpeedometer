@@ -33,8 +33,7 @@ struct LandscapeView: View {
                 VStack(alignment: .trailing, spacing: max(4, base * 0.02)) {
                     Spacer(minLength: base * 0.08)
 
-//                    Text(String(displayedSpeed))
-                    Text("278")
+                    Text(String(displayedSpeed))
                         .font(.custom("Seven Segment", size: speedFontSize, relativeTo: .largeTitle))
                         .monospacedDigit()
                         .kerning(-base * 0.012)
