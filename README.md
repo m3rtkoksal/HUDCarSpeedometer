@@ -11,7 +11,7 @@ HUD is a SwiftUI-based iOS head-up display that mirrors your current speed and n
 
 ## Requirements
 - Xcode 15 or newer
-- iOS 17 (minimum deployment target 17.0)
+- iOS 15 (minimum deployment target 15.8)
 - Location permissions (When In Use / Always & When In Use)
 
 ## Getting Started
