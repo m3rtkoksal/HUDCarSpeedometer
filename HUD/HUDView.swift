@@ -87,6 +87,10 @@ struct HUDView: View {
 
     @State private var previousBrightness: CGFloat = UIScreen.main.brightness
     @State private var previousIdleTimerDisabled: Bool = false
+    @State private var speedBelowThresholdSince: Date? = nil
+    @State private var notChargingSince: Date? = nil
+    @State private var lastObservedSpeedKmh: Double = 0
+    @State private var batteryState: UIDevice.BatteryState = UIDevice.current.batteryState
 
     private let numberFormatter: NumberFormatter = {
         let f = NumberFormatter()
@@ -97,18 +101,20 @@ struct HUDView: View {
     }()
     private let flashTimer = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
     @State private var isFlashing: Bool = false
+    private let inactivityDuration: TimeInterval = 300
+    private let lowSpeedThresholdKmh: Double = 10
 
     var body: some View {
         let screen = UIScreen.main.bounds
         let containerWidth = usesLandscapeWidth ? screen.height : screen.width
         let containerHeight = usesLandscapeWidth ? screen.width : screen.height
         ZStack {
-            (vm.isOverLimit && isFlashing ? Color.white : Color.black)
+            Color.black
                 .ignoresSafeArea()
 
             // Mirrored main content
             VStack(spacing: 10) {
-                speedText
+                speedText(containerWidth: containerWidth, containerHeight: containerHeight)
             }
             .opacity(0.98)
             .scaleEffect(x: mirrorEnabled ? -1 : 1, y: 1)
@@ -145,6 +151,8 @@ struct HUDView: View {
             applyIdleTimerSetting()
             // Request location permission immediately on first launch; delegate will start updates.
             locationManager.start()
+            UIDevice.current.isBatteryMonitoringEnabled = true
+            batteryState = UIDevice.current.batteryState
             if cityPackDownloaded, !storedCityName.isEmpty {
                 ODRManager.shared.requestCityPack(countryCode: storedCountryCode, cityName: storedCityName) { result in
                     DispatchQueue.main.async {
@@ -171,7 +179,11 @@ struct HUDView: View {
         .onChange(of: maxBrightnessEnabled) { _ in
             applyBrightnessSetting()
         }
-        .onChange(of: keepAwakeEnabled) { _ in
+        .onChange(of: keepAwakeEnabled) { enabled in
+            if enabled {
+                speedBelowThresholdSince = nil
+                notChargingSince = nil
+            }
             applyIdleTimerSetting()
         }
         .onChange(of: showSettings) { isOpen in
@@ -198,6 +210,7 @@ struct HUDView: View {
             UIScreen.main.brightness = previousBrightness
             UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
             locationManager.stop()
+            UIDevice.current.isBatteryMonitoringEnabled = false
         }
         .onReceive(flashTimer) { _ in
             if vm.isOverLimit {
@@ -215,7 +228,7 @@ struct HUDView: View {
         }
     }
 
-    private var speedText: some View {
+    private func speedText(containerWidth: CGFloat, containerHeight: CGFloat) -> some View {
         let speedValueMps = locationManager.speedMetersPerSecond
         let speedKmh: Double? = speedValueMps.map { $0 * 3.6 }
         let unit: String = speedUnitIsKmh ? "km/h" : "mph"
@@ -224,7 +237,7 @@ struct HUDView: View {
         let limitDisplayValue: Double? = speedUnitIsKmh ? limitKmh : limitKmh.map { $0 * 0.62137119 }
         let limitTextString: String? = limitDisplayValue.flatMap { numberFormatter.string(from: NSNumber(value: $0)) }
         let limitBadgeView: (String, Color) -> AnyView = { text, color in
-            AnyView(limitBadge(for: .zero, text: text, color: color))
+            vm.limitBadge(text: text, color: color)
         }
         let isOverLimit: Bool = {
             guard let v = speedKmh, let lim = limitKmh else { return false }
@@ -234,6 +247,7 @@ struct HUDView: View {
 
         return Group {
             if usesLandscapeWidth {
+                let base = min(containerWidth, containerHeight)
                 LandscapeView(
                     displayedSpeed: vm.displayedSpeed,
                     unitText: unit.uppercased(),
@@ -243,20 +257,21 @@ struct HUDView: View {
                     showSettings: $showSettings,
                     limitBadge: limitBadgeView
                 )
+                .frame(width: containerWidth, height: containerHeight)
             } else {
                 VStack(spacing: 10) {
                     HStack(spacing: 12) {
                         SettingsButton(isPresented: $showSettings)
 
                         if let limit = limitTextString {
-                            limitBadge(for: .zero, text: limit, color: limitColor)
+                            vm.limitBadge(text: limit, color: limitColor)
                         }
                         Spacer(minLength: 0)
                     }
 
-                  
+                  Spacer()
                     Text(String(vm.displayedSpeed))
-                        .font(.system(size: 500, weight: .bold, design: .rounded))
+                        .font(.custom("Seven Segment", size: 170, relativeTo: .largeTitle))
                         .monospacedDigit()
                         .kerning(2)
                         .foregroundStyle(hudColor)
@@ -265,12 +280,14 @@ struct HUDView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(unit.uppercased())
-                        .font(.system(size: 50, weight: .semibold, design: .rounded))
+                        .font(.custom("Seven Segment", size: 20, relativeTo: .title3))
                         .foregroundStyle(hudColor.opacity(0.85))
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.bottom, 30)
+                .padding(.trailing, 30)
             }
         }
         .alert(isPresented: $showCityDownloadPrompt) {
@@ -315,10 +332,13 @@ struct HUDView: View {
                 #if DEBUG
                 print("[SpeedLimit] querying at", loc.coordinate.latitude, loc.coordinate.longitude)
                 #endif
-                vm.currentLimit = speedStore.querySpeedLimit(near: loc.coordinate)
+                let limit = speedStore.querySpeedLimit(near: loc.coordinate)
+                DispatchQueue.main.async {
+                    vm.currentLimit = limit
+                }
                 #if DEBUG
                 if let limit = vm.currentLimit { print("[SpeedLimit] limit=", limit) }
-                else { print("[SpeedLimit] no match yet") }
+                else { print("[SpeedLimit] no match on initial query") }
                 #endif
             }
         }
@@ -343,6 +363,8 @@ struct HUDView: View {
             let kmh = (s ?? 0) * 3.6
             let value = speedUnitIsKmh ? kmh : kmh * 0.62137119
             vm.updateSpeed(metersPerSecond: s)
+            lastObservedSpeedKmh = kmh
+            updateAutoDisableState(currentSpeedKmh: kmh)
         }
         .onChange(of: speedUnitIsKmh) { _ in
             // Re-render using new units based on last known value
@@ -351,36 +373,10 @@ struct HUDView: View {
             let value = speedUnitIsKmh ? kmh : kmh * 0.62137119
             vm.setUnit(isKmh: speedUnitIsKmh)
         }
-    }
-
-    private func bundleURLForCity(_ city: String) -> URL? {
-        let base = sanitizeCityName(city)
-        return Bundle.main.url(forResource: base, withExtension: "sqlite")
-    }
-
-    private func sanitizeCityName(_ raw: String) -> String {
-        let allowed = CharacterSet.alphanumerics
-        return raw
-            .folding(options: .diacriticInsensitive, locale: .current)
-            .replacingOccurrences(of: " ", with: "")
-            .components(separatedBy: allowed.inverted).joined()
-    }
-
-    private func limitBadge(for size: CGSize, text: String, color: Color, large: Bool = false) -> some View {
-        // Static dimensions for consistent appearance in all layouts
-        return ZStack {
-            Circle()
-                .fill(.white)
-                .overlay(
-                    Circle().stroke(.red, lineWidth: 10)
-                )
-            Text(text)
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundStyle(.black)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
+        .onReceive(NotificationCenter.default.publisher(for: UIDevice.batteryStateDidChangeNotification)) { _ in
+            batteryState = UIDevice.current.batteryState
+            updateAutoDisableState(currentSpeedKmh: lastObservedSpeedKmh)
         }
-        .frame(width: 68, height: 68)
     }
 
     private func applyBrightnessSetting() {
@@ -389,6 +385,15 @@ struct HUDView: View {
 
     private func applyIdleTimerSetting() {
         vm.applyIdleTimer(enabled: keepAwakeEnabled)
+    }
+
+    private func updateAutoDisableState(currentSpeedKmh: Double) {
+        guard keepAwakeEnabled else { return }
+
+        if vm.shouldDisableKeepAwake(currentSpeedKmh: currentSpeedKmh, batteryState: batteryState, lowSpeedThreshold: lowSpeedThresholdKmh, inactivityDuration: inactivityDuration) {
+            keepAwakeEnabled = false
+            applyIdleTimerSetting()
+        }
     }
 }
 

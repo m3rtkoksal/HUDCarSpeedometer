@@ -16,6 +16,13 @@ extension HUDView {
 
         private var overlayWidth: CGFloat { usesLandscapeWidth ? containerHeight : containerWidth }
         private var overlayHeight: CGFloat { usesLandscapeWidth ? containerWidth : containerHeight }
+        private var hudTint: Color {
+            let color = HUDColor(rawValue: hudColorRaw)?.color ?? .white
+            if color == .white {
+                return .gray
+            }
+            return color
+        }
 
         var body: some View {
             VStack(spacing: 16) {
@@ -32,7 +39,7 @@ extension HUDView {
                     Toggle(isOn: $mirrorEnabled) {
                         Label("Mirror display (for windshield reflection)", systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
                     }
-                    .tint(.white)
+                    .tint(hudTint)
                     .foregroundStyle(.white)
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -65,19 +72,19 @@ extension HUDView {
                     Toggle(isOn: $speedUnitIsKmh) {
                         Label("Units: km/h (off = mph)", systemImage: "speedometer")
                     }
-                    .tint(.white)
+                    .tint(hudTint)
                     .foregroundStyle(.white)
 
                     Toggle(isOn: $keepAwakeEnabled) {
                         Label("Keep screen awake", systemImage: "moon.zzz")
                     }
-                    .tint(.white)
+                    .tint(hudTint)
                     .foregroundStyle(.white)
 
                     Toggle(isOn: $maxBrightnessEnabled) {
                         Label("Maximize brightness while active", systemImage: "sun.max")
                     }
-                    .tint(.white)
+                    .tint(hudTint)
                     .foregroundStyle(.white)
 
                     VStack(alignment: .leading, spacing: 8) {
