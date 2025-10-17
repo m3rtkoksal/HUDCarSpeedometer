@@ -373,6 +373,12 @@ struct HUDView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIDevice.batteryStateDidChangeNotification)) { _ in
             batteryState = UIDevice.current.batteryState
+            if batteryState == .charging || batteryState == .full {
+                if !keepAwakeEnabled {
+                    keepAwakeEnabled = true
+                    applyIdleTimerSetting()
+                }
+            }
             updateAutoDisableState(currentSpeedKmh: lastObservedSpeedKmh)
         }
     }

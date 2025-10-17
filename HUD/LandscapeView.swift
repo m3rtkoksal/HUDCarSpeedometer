@@ -14,11 +14,11 @@ struct LandscapeView: View {
             let width = proxy.size.width
             let height = proxy.size.height
             let base = min(width, height)
-            let speedFontSize = min(max(120, base * 0.5), width * 0.55)
+            let speedFontSize = min(max(120, base * 0.8), width * 0.7)
             let unitFontSize = min(max(20, base * 0.07), width * 0.12)
 
-            HStack(spacing: max(12, base * 0.04)) {
-                VStack(spacing: max(8, base * 0.04)) {
+            HStack(alignment: .bottom, spacing: max(10, base * 0.035)) {
+                VStack(spacing: max(8, base * 0.035)) {
                     SettingsButton(isPresented: $showSettings)
 
                     if let limit = limitText {
@@ -28,10 +28,11 @@ struct LandscapeView: View {
                     Spacer()
                 }
                 .padding(.top, max(10, base * 0.06))
-                .frame(width: max(56, base * 0.18))
+                .padding(.leading, 60)
+                .frame(width: max(44, base * 0.11))
 
                 VStack(alignment: .trailing, spacing: max(4, base * 0.02)) {
-                    Spacer(minLength: base * 0.08)
+                    Spacer(minLength: base * 0.05)
 
                     Text(String(displayedSpeed))
                         .hudFont(.speedValue(size: speedFontSize))
@@ -39,6 +40,7 @@ struct LandscapeView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.4)
                         .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.trailing, 100)
 
                     Text(unitText)
                         .hudFont(.speedUnit(size: unitFontSize))
@@ -46,13 +48,13 @@ struct LandscapeView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                         .padding(.top, base * 0.01)
-                        .padding(.trailing, base * 0.015)
+                        .padding(.trailing, base * 0.005)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                .padding(.trailing, max(12, base * 0.04))
+                .padding(.trailing, max(8, base * 0.03))
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding(.horizontal, max(16, base * 0.05))
+            .padding(.horizontal, max(10, base * 0.045))
             .padding(.vertical, base * 0.04)
         }
     }
