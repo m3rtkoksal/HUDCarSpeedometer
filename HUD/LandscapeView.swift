@@ -34,16 +34,14 @@ struct LandscapeView: View {
                     Spacer(minLength: base * 0.08)
 
                     Text(String(displayedSpeed))
-                        .font(.custom("Seven Segment", size: speedFontSize, relativeTo: .largeTitle))
-                        .monospacedDigit()
-                        .kerning(-base * 0.012)
+                        .hudFont(.speedValue(size: speedFontSize))
                         .foregroundStyle(hudColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.4)
                         .frame(maxWidth: .infinity, alignment: .trailing)
 
                     Text(unitText)
-                        .font(.custom("Seven Segment", size: unitFontSize, relativeTo: .title3))
+                        .hudFont(.speedUnit(size: unitFontSize))
                         .foregroundStyle(hudColor.opacity(0.85))
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)

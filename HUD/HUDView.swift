@@ -271,16 +271,14 @@ struct HUDView: View {
 
                   Spacer()
                     Text(String(vm.displayedSpeed))
-                        .font(.custom("Seven Segment", size: 170, relativeTo: .largeTitle))
-                        .monospacedDigit()
-                        .kerning(2)
+                        .hudFont(.speedValue(size: 170))
                         .foregroundStyle(hudColor)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(unit.uppercased())
-                        .font(.custom("Seven Segment", size: 20, relativeTo: .title3))
+                        .hudFont(.speedUnit(size: 20))
                         .foregroundStyle(hudColor.opacity(0.85))
                         .lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .trailing)

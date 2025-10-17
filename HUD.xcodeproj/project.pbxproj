@@ -19,6 +19,9 @@
 				Roads/Istanbul.sqlite = (city_TR_Istanbul, );
 				Roads/Izmir.sqlite = (city_TR_Izmir, );
 			};
+			membershipExceptions = (
+				Info.plist,
+			);
 			target = 8E56E0112E9EA7F4003D5C85 /* HUD */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -278,12 +281,10 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HUD/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "HUD Car Speedometer";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
-				INFOPLIST_KEY_UIAppFonts = (
-					"Seven Segment.ttf",
-				);
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location is needed even when the app is mirrored on your windshield to keep speed limit alerts accurate.";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Location is needed even when the app is mirrored on your windshield to keep speed limit alerts accurate.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to calculate and display speed.";
@@ -333,11 +334,12 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HUD/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "HUD Car Speedometer";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
-				INFOPLIST_KEY_UIAppFonts = (
-					"Seven Segment.ttf",
-				);
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location is needed even when the app is mirrored on your windshield to keep speed limit alerts accurate.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Location is needed even when the app is mirrored on your windshield to keep speed limit alerts accurate.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to calculate and display speed.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
